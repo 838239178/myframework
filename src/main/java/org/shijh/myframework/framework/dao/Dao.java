@@ -2,7 +2,7 @@ package org.shijh.myframework.framework.dao;
 
 
 
-import org.shijh.myframework.framework.ResultMap;
+import org.shijh.myframework.framework.bean.ResultMap;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;

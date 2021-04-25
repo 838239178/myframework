@@ -1,4 +1,4 @@
-package org.shijh.myframework.framework;
+package org.shijh.myframework.framework.bean;
 
 import lombok.Data;
 

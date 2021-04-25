@@ -1,36 +1,52 @@
 package org.shijh.myframework.framework.listener;
 
-import org.shijh.myframework.framework.BeanFactory;
-import org.shijh.myframework.framework.FrameworkConfig;
+import org.shijh.myframework.framework.bean.BeanFactory;
+import org.shijh.myframework.framework.bean.FrameworkConfig;
+import org.shijh.myframework.framework.bean.JdbcConfig;
 import org.shijh.myframework.framework.controller.Controller;
+import org.shijh.myframework.framework.dao.ConnectionManager;
 import org.shijh.myframework.framework.servlet.ServletHandler;
 import org.shijh.myframework.framework.util.ResourceUtil;
-import org.yaml.snakeyaml.Yaml;
 
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 import javax.servlet.annotation.WebListener;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.util.List;
 
 @WebListener
 public class InitListener implements ServletContextListener {
+
+    private final ServletHandler servletHandler = BeanFactory.I.getBean(ServletHandler.class);
+
+    private void initController(List<String> controllers) throws ClassNotFoundException {
+        for (String className : controllers) {
+            Object bean = BeanFactory.I.getBean(Class.forName(className));
+            assert servletHandler != null;
+            servletHandler.addCtrl((Controller) bean);
+        }
+    }
+
+    private void initJdbc(JdbcConfig jdbcConfig) throws ClassNotFoundException {
+        if (jdbcConfig == null) {
+            throw new ClassNotFoundException("缺少jdbc参数");
+        }
+        ConnectionManager.setJdbcConfig(jdbcConfig);
+    }
+
     @Override
     public void contextInitialized(ServletContextEvent sce) {
-        ServletHandler servletHandler = BeanFactory.I.getBean(ServletHandler.class);
         try {
             InputStream resource = ResourceUtil.getResourceAsStream("classpath:myframework.yml");
             FrameworkConfig config = ResourceUtil.loadYamlAs(resource, FrameworkConfig.class);
-            for (String className : config.getController()) {
-                Object bean = BeanFactory.I.getBean(Class.forName(className));
-                assert servletHandler != null;
-                servletHandler.addCtrl((Controller) bean);
-            }
+            initController(config.getController());
+            initJdbc(config.getJdbcConfig());
         } catch (FileNotFoundException e) {
             System.out.println("找不到配置文件‘myframework.yml’");
             e.printStackTrace();
         } catch (ClassNotFoundException e) {
-            System.out.println("找不到Controller，检查配置文件是否有误");
+            System.out.println("找不到必要参数Controller/jdbcConfig，检查配置文件是否有误");
             e.printStackTrace();
         }
     }

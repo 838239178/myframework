@@ -2,9 +2,10 @@ package org.shijh.myframework.framework.dao;
 
 
 import org.shijh.myframework.framework.util.Assembler;
-import org.shijh.myframework.framework.ResultMap;
+import org.shijh.myframework.framework.bean.ResultMap;
 import org.shijh.myframework.framework.annotation.Autowired;
 import org.shijh.myframework.framework.annotation.Component;
+import org.shijh.myframework.framework.util.ClassUtil;
 import org.shijh.myframework.framework.util.Str;
 
 import java.lang.reflect.Field;
@@ -65,7 +66,7 @@ public class JdbcTemplate {
         String statementMethodName = getStatementSetterName(param);
         Class<?> pClass = param.getClass();
         if (param instanceof Number) {
-            pClass = Assembler.primitiveClass((Class<? extends Number>) pClass);
+            pClass = ClassUtil.primitiveClass((Class<? extends Number>) pClass);
         }
         Method method = statement.getClass().getDeclaredMethod(statementMethodName, int.class, pClass);
         method.setAccessible(true);

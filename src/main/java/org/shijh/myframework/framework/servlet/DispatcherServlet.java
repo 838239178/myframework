@@ -1,8 +1,8 @@
 package org.shijh.myframework.framework.servlet;
 
 
-import org.shijh.myframework.framework.BeanFactory;
-import org.shijh.myframework.framework.ModelAndView;
+import org.shijh.myframework.framework.bean.BeanFactory;
+import org.shijh.myframework.framework.bean.ModelAndView;
 import org.shijh.myframework.framework.util.Str;
 
 import javax.servlet.ServletException;
@@ -25,16 +25,15 @@ public class DispatcherServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String url = req.getRequestURL().toString();
+        assert handler != null;
         ModelAndView res = handler.execute(url, req.getParameterMap());
-        HttpSession session = req.getSession();
         if (res == null) {
-            session.setAttribute("success", false);
             resp.sendRedirect("/error.jsp");
         } else {
-            session.setAttribute("success", res.getSuccess());
-            session.setAttribute("result", res.getModel());
+            req.setAttribute("success", res.getSuccess());
+            req.setAttribute("result", res.getModel());
             if (!Str.empty(res.getView())) {
-                resp.sendRedirect(res.getView());
+                req.getRequestDispatcher(res.getView()).forward(req,resp);
             }
         }
     }

@@ -1,7 +1,7 @@
 package org.shijh.myframework.framework.util;
 
 
-import org.shijh.myframework.framework.BeanFactory;
+import org.shijh.myframework.framework.bean.BeanFactory;
 import org.shijh.myframework.framework.annotation.Autowired;
 import org.shijh.myframework.framework.annotation.Component;
 
@@ -9,18 +9,6 @@ import java.lang.reflect.Field;
 import java.util.logging.Logger;
 
 public class Assembler {
-
-    private static final Class<?>[] primitiveClasses = new Class[]{int.class, long.class, float.class, double.class,
-            char.class, boolean.class, byte.class, short.class};
-
-    public static Class<?> primitiveClass(Class<? extends Number> target) {
-        for (Class<?> aClass : primitiveClasses) {
-            if (target.getSimpleName().toLowerCase().matches(aClass.getName() + ".*")) {
-                return aClass;
-            }
-        }
-        return null;
-    }
 
     private static boolean isComponent(Object o) {
         Component anno = o.getClass().getDeclaredAnnotation(Component.class);

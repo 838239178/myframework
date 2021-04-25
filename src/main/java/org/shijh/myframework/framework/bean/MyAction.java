@@ -1,4 +1,4 @@
-package org.shijh.myframework.framework;
+package org.shijh.myframework.framework.bean;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
