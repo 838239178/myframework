@@ -10,7 +10,6 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 import java.io.IOException;
 
 @WebServlet("/api/*")
@@ -26,7 +25,7 @@ public class DispatcherServlet extends HttpServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String url = req.getRequestURL().toString();
         assert handler != null;
-        ModelAndView res = handler.execute(url, req.getParameterMap());
+        ModelAndView res = handler.execute(url, req.getParameterMap(), req.getSession());
         if (res == null) {
             resp.sendRedirect("/error.jsp");
         } else {

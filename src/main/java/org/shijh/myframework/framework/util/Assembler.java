@@ -1,6 +1,7 @@
 package org.shijh.myframework.framework.util;
 
 
+import lombok.extern.java.Log;
 import org.shijh.myframework.framework.bean.BeanFactory;
 import org.shijh.myframework.framework.annotation.Autowired;
 import org.shijh.myframework.framework.annotation.Component;
@@ -8,6 +9,7 @@ import org.shijh.myframework.framework.annotation.Component;
 import java.lang.reflect.Field;
 import java.util.logging.Logger;
 
+@Log
 public class Assembler {
 
     private static boolean isComponent(Object o) {
@@ -28,7 +30,7 @@ public class Assembler {
                         autowired(targetBean);
                     }
                 } catch (IllegalAccessException e) {
-                    Logger.getGlobal().warning(o.getClass().getSimpleName() + "的参数注入失败，类型为" + field.getType().getSimpleName());
+                    log.warning(o.getClass().getSimpleName() + "的参数注入失败，类型为" + field.getType().getSimpleName());
                     e.printStackTrace();
                 }
             }

@@ -10,7 +10,9 @@ import org.shijh.myframework.framework.annotation.Mapping;
 import org.shijh.myframework.framework.annotation.Param;
 import org.shijh.myframework.framework.controller.Controller;
 import org.shijh.myframework.framework.util.Str;
+import sun.rmi.runtime.Log;
 
+import javax.servlet.http.HttpSession;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
@@ -18,6 +20,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentSkipListMap;
 
 @Component("servletHandler")
+@lombok.extern.java.Log
 public class ServletHandler {
     private final Map<String, Controller> ctrlMap;
 
@@ -32,12 +35,7 @@ public class ServletHandler {
 
     public ServletHandler() {
         ctrlMap = new ConcurrentSkipListMap<>();
-//        addCtrl(
-//                new MajorController(),
-//                new StudentController()
-//        );
     }
-
 
     private MyAction getMethod(String url) {
         Iterator<Map.Entry<String, Controller>> iterator = ctrlMap.entrySet().iterator();
@@ -54,13 +52,13 @@ public class ServletHandler {
 
     private Map<String, Object> getCurrentMap(Map<String, ? extends String[]> map) {
         Map<String, Object> cur = new HashMap<>();
-        map.forEach((key,val)->{
+        map.forEach((key, val) -> {
             if (val.length == 1) {
                 String[] vals = val;
                 if (!Str.empty(vals[0])) {
                     cur.put(key, vals[0]);
                 } else {
-                    cur.put(key,"");
+                    cur.put(key, "");
                 }
             } else if (val.length > 1) {
                 cur.put(key, val);
@@ -81,10 +79,13 @@ public class ServletHandler {
         return null;
     }
 
-    public ModelAndView execute(String url, Map<String, String[]> paramMap) {
-        Map<String,Object> curMap = getCurrentMap(paramMap);
+    public ModelAndView execute(String url, Map<String, String[]> paramMap, HttpSession session) {
+        Map<String, Object> curMap = getCurrentMap(paramMap);
         MyAction method = getMethod(url);
-        if (method == null) return null;
+        if (method == null) {
+            log.warning("找不到控制器方法，错误url:" + url);
+            return null;
+        }
         Parameter[] methodParams = method.getParameters();
         List<Object> realParam = new ArrayList<>(10);
         try {
@@ -101,8 +102,13 @@ public class ServletHandler {
                 }
                 // 尝试获取待注入参数的构造器 否则把整个paramMap当作一个对象处理
                 try {
-                    Constructor<?> constructor = mParam.getType().getConstructor(value.getClass());
-                    Object rp = constructor.newInstance(value);
+                    Object rp;
+                    if (mParam.getType().equals(HttpSession.class)) {
+                        rp = session;
+                    } else {
+                        Constructor<?> constructor = mParam.getType().getConstructor(value.getClass());
+                        rp = constructor.newInstance(value);
+                    }
                     realParam.add(rp);
                 } catch (NoSuchMethodException ne) {
                     Object p = mParam.getType().newInstance();

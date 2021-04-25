@@ -1,5 +1,6 @@
 package org.shijh.myframework.framework.listener;
 
+import lombok.extern.java.Log;
 import org.shijh.myframework.framework.bean.BeanFactory;
 import org.shijh.myframework.framework.bean.FrameworkConfig;
 import org.shijh.myframework.framework.bean.JdbcConfig;
@@ -11,11 +12,13 @@ import org.shijh.myframework.framework.util.ResourceUtil;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 import javax.servlet.annotation.WebListener;
+import javax.servlet.http.HttpSession;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.List;
 
 @WebListener
+@Log
 public class InitListener implements ServletContextListener {
 
     private final ServletHandler servletHandler = BeanFactory.I.getBean(ServletHandler.class);
@@ -40,13 +43,13 @@ public class InitListener implements ServletContextListener {
         try {
             InputStream resource = ResourceUtil.getResourceAsStream("classpath:myframework.yml");
             FrameworkConfig config = ResourceUtil.loadYamlAs(resource, FrameworkConfig.class);
-            initController(config.getController());
             initJdbc(config.getJdbcConfig());
+            initController(config.getController());
         } catch (FileNotFoundException e) {
-            System.out.println("找不到配置文件‘myframework.yml’");
+            log.warning("找不到配置文件‘myframework.yml’");
             e.printStackTrace();
         } catch (ClassNotFoundException e) {
-            System.out.println("找不到必要参数Controller/jdbcConfig，检查配置文件是否有误");
+            log.warning("找不到必要参数Controller/jdbcConfig，检查配置文件是否有误");
             e.printStackTrace();
         }
     }

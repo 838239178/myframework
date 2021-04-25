@@ -8,6 +8,7 @@ org\shijh\myframework\framework\bean\ResultMap.class
 org\shijh\myframework\framework\util\Assembler.class
 org\shijh\myframework\framework\controller\Controller.class
 org\shijh\myframework\framework\dao\ConnectionPool.class
+org\shijh\myframework\framework\filter\CharacterEncodingFilter.class
 org\shijh\myframework\framework\servlet\ServletHandler.class
 org\shijh\myframework\framework\bean\ModelAndView.class
 org\shijh\myframework\framework\dao\JdbcTemplate.class

@@ -1,13 +1,14 @@
 package org.shijh.myframework.framework.dao;
 
 
-import org.shijh.myframework.framework.util.Assembler;
+import lombok.extern.java.Log;
+import org.apache.commons.beanutils.BeanUtils;
+import org.shijh.myframework.framework.annotation.Properties;
 import org.shijh.myframework.framework.bean.ResultMap;
 import org.shijh.myframework.framework.annotation.Autowired;
 import org.shijh.myframework.framework.annotation.Component;
 import org.shijh.myframework.framework.util.ClassUtil;
 import org.shijh.myframework.framework.util.Str;
-
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -15,6 +16,7 @@ import java.sql.*;
 import java.util.*;
 
 @Component("jdbcTemplate")
+@Log
 public class JdbcTemplate {
 
     @Autowired
@@ -80,11 +82,11 @@ public class JdbcTemplate {
         String regex = "#\\{([a-zA-Z0-9]+)}";
         String[] params = Str.match(regex, sql);
 
-        System.out.println(Arrays.toString(params));
+        log.info(Arrays.toString(params));
 
         String afterSql = sql.replaceAll(regex, "?");
 
-        System.out.println(afterSql);
+        log.info(afterSql);
 
         PreparedStatement statement = connection.prepareStatement(afterSql);
         Object o = null;
@@ -133,6 +135,35 @@ public class JdbcTemplate {
         return 0;
     }
 
+    private Object getResultBean(Class<?> beanClass, Map<String,Object> params) {
+        Properties properties = beanClass.getAnnotation(Properties.class);
+        Object o = null;
+        try {
+            o = beanClass.newInstance();
+            BeanUtils.populate(o,params);
+            if (properties == null) return o;
+            for (String fieldName : properties.value()) {
+                Field field = beanClass.getField(fieldName);
+                BeanUtils.setProperty(o, fieldName, getResultBean(field.getType(),params));
+            }
+        } catch (InstantiationException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (NoSuchFieldException e) {
+            e.printStackTrace();
+        } catch (InvocationTargetException e) {
+            e.printStackTrace();
+        }
+        return o;
+    }
+
+    private Object getResult(Class<?> invokeClass, Map<String,Object> params) {
+        org.shijh.myframework.framework.annotation.ResultMap resultMap = invokeClass.getAnnotation(org.shijh.myframework.framework.annotation.ResultMap.class);
+        Class<?> beanClass = resultMap.value();
+        return getResultBean(beanClass, params);
+    }
+
     @SuppressWarnings("unchecked")
     private <T> List<T> queryList(String sql, boolean isBean, boolean isForObject, ResultMap resultMap, Object... args) {
         ResultSet resultSet = null;
@@ -149,6 +180,7 @@ public class JdbcTemplate {
             while (resultSet.next()) {
                 Map<String, Object> rm = getResultMap(resultSet);
                 Object result = resultMap.invoke(rm);
+//                Object result = getResult(ClassUtil.getInvokeClass(), rm);
                 resultList.add((T) result);
                 if (isForObject) break;
             }
@@ -196,7 +228,9 @@ public class JdbcTemplate {
      */
     @SuppressWarnings("unchecked")
     public <T> T queryObject(String sql, Object bean, ResultMap resultMap) {
-        return (T) queryList(sql, true, true, resultMap, bean).get(0);
+        List<Object> list = queryList(sql, true, true, resultMap, bean);
+        if (list.isEmpty()) return null;
+        return (T) list.get(0);
     }
 
     /**
@@ -208,7 +242,9 @@ public class JdbcTemplate {
      */
     @SuppressWarnings("unchecked")
     public <T> T queryObject(String sql, ResultMap resultMap, Object... args) {
-        return (T) queryList(sql, false, true, resultMap, args).get(0);
+        List<Object> list = queryList(sql, false, true, resultMap, args);
+        if (list.isEmpty()) return null;
+        return (T) list.get(0);
     }
 
     /**

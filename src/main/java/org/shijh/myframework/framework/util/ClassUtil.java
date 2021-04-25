@@ -14,6 +14,22 @@ public abstract class ClassUtil {
         return null;
     }
 
+    public static Class<?> getInvokeClass() {
+        StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
+        String className;
+        if (stackTrace.length <= 1) {
+            className = stackTrace[0].getClassName();
+        } else {
+            className = stackTrace[1].getClassName();
+        }
+        try {
+            return Class.forName(className);
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     public static ClassLoader getDefaultClassLoader() {
         ClassLoader cl = null;
 
