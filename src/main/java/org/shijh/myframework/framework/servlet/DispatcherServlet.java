@@ -1,6 +1,7 @@
 package org.shijh.myframework.framework.servlet;
 
 
+import org.shijh.myframework.framework.BeanFactory;
 import org.shijh.myframework.framework.ModelAndView;
 import org.shijh.myframework.framework.util.Str;
 
@@ -14,7 +15,7 @@ import java.io.IOException;
 
 @WebServlet("/api/*")
 public class DispatcherServlet extends HttpServlet {
-    private final ServletHandler handler = new ServletHandler();
+    private final ServletHandler handler = BeanFactory.I.getBean(ServletHandler.class);
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {

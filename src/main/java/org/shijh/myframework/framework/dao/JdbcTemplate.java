@@ -1,7 +1,7 @@
 package org.shijh.myframework.framework.dao;
 
 
-import org.shijh.myframework.framework.Assembler;
+import org.shijh.myframework.framework.util.Assembler;
 import org.shijh.myframework.framework.ResultMap;
 import org.shijh.myframework.framework.annotation.Autowired;
 import org.shijh.myframework.framework.annotation.Component;
@@ -56,7 +56,8 @@ public class JdbcTemplate {
         String typeName = param.getClass().getSimpleName();
         String fstChar = typeName.substring(0, 1).toUpperCase();
         String otherChars = typeName.substring(1);
-        return "set" + fstChar + otherChars;
+        String setter = "set" + fstChar + otherChars;
+        return setter.equals("setInteger") ? "setInt" : setter;
     }
 
     @SuppressWarnings("unchecked")
@@ -65,9 +66,6 @@ public class JdbcTemplate {
         Class<?> pClass = param.getClass();
         if (param instanceof Number) {
             pClass = Assembler.primitiveClass((Class<? extends Number>) pClass);
-        }
-        if (statementMethodName.equals("setInteger")) {
-            statementMethodName = "setInt";
         }
         Method method = statement.getClass().getDeclaredMethod(statementMethodName, int.class, pClass);
         method.setAccessible(true);

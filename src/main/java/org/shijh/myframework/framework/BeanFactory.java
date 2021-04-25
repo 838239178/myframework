@@ -15,11 +15,11 @@ public enum BeanFactory {
     @SuppressWarnings("unchecked")
     public <T> T getBean(Class<T> clazz) {
         Component anno = clazz.getAnnotation(Component.class);
+        String key = clazz.getSimpleName();
+        if (anno != null) {
+            key = anno.value();
+        }
         try {
-            String key = clazz.getSimpleName();
-            if (anno != null) {
-                key = anno.value();
-            }
             if (!beanMap.containsKey(key)) beanMap.put(key, clazz.getConstructor().newInstance());
             Object bean = beanMap.get(key);
             return (T)bean;

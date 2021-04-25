@@ -1,6 +1,7 @@
-package org.shijh.myframework.framework;
+package org.shijh.myframework.framework.util;
 
 
+import org.shijh.myframework.framework.BeanFactory;
 import org.shijh.myframework.framework.annotation.Autowired;
 import org.shijh.myframework.framework.annotation.Component;
 
@@ -26,7 +27,6 @@ public class Assembler {
         return anno != null;
     }
 
-    @SuppressWarnings("unchecked")
     public static void autowired(Object o) {
         Field[] fields = o.getClass().getDeclaredFields();
         for (Field field : fields) {

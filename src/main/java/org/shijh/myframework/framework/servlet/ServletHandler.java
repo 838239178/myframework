@@ -2,7 +2,8 @@ package org.shijh.myframework.framework.servlet;
 
 
 import org.apache.commons.beanutils.BeanUtils;
-import org.shijh.myframework.framework.Assembler;
+import org.shijh.myframework.framework.annotation.Component;
+import org.shijh.myframework.framework.util.Assembler;
 import org.shijh.myframework.framework.ModelAndView;
 import org.shijh.myframework.framework.MyAction;
 import org.shijh.myframework.framework.annotation.Mapping;
@@ -16,6 +17,7 @@ import java.lang.reflect.Parameter;
 import java.util.*;
 import java.util.concurrent.ConcurrentSkipListMap;
 
+@Component("servletHandler")
 public class ServletHandler {
     private final Map<String, Controller> ctrlMap;
 
