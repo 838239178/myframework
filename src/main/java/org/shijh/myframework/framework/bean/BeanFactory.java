@@ -2,6 +2,7 @@ package org.shijh.myframework.framework.bean;
 
 
 import org.shijh.myframework.framework.annotation.Component;
+import org.shijh.myframework.framework.util.Str;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
@@ -16,7 +17,7 @@ public enum BeanFactory {
     public <T> T getBean(Class<T> clazz) {
         Component anno = clazz.getAnnotation(Component.class);
         String key = clazz.getSimpleName();
-        if (anno != null) {
+        if (anno != null && !Str.empty(anno.value())) {
             key = anno.value();
         }
         try {

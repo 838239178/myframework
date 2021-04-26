@@ -2,8 +2,6 @@ package org.shijh.myframework.framework.dao;
 
 
 import lombok.extern.java.Log;
-import org.apache.commons.beanutils.BeanUtils;
-import org.shijh.myframework.framework.annotation.Properties;
 import org.shijh.myframework.framework.bean.ResultMap;
 import org.shijh.myframework.framework.annotation.Autowired;
 import org.shijh.myframework.framework.annotation.Component;
@@ -135,34 +133,34 @@ public class JdbcTemplate {
         return 0;
     }
 
-    private Object getResultBean(Class<?> beanClass, Map<String,Object> params) {
-        Properties properties = beanClass.getAnnotation(Properties.class);
-        Object o = null;
-        try {
-            o = beanClass.newInstance();
-            BeanUtils.populate(o,params);
-            if (properties == null) return o;
-            for (String fieldName : properties.value()) {
-                Field field = beanClass.getField(fieldName);
-                BeanUtils.setProperty(o, fieldName, getResultBean(field.getType(),params));
-            }
-        } catch (InstantiationException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (NoSuchFieldException e) {
-            e.printStackTrace();
-        } catch (InvocationTargetException e) {
-            e.printStackTrace();
-        }
-        return o;
-    }
-
-    private Object getResult(Class<?> invokeClass, Map<String,Object> params) {
-        org.shijh.myframework.framework.annotation.ResultMap resultMap = invokeClass.getAnnotation(org.shijh.myframework.framework.annotation.ResultMap.class);
-        Class<?> beanClass = resultMap.value();
-        return getResultBean(beanClass, params);
-    }
+//    private Object getResultBean(Class<?> beanClass, Map<String,Object> params) {
+//        Properties properties = beanClass.getAnnotation(Properties.class);
+//        Object o = null;
+//        try {
+//            o = beanClass.newInstance();
+//            BeanUtils.populate(o,params);
+//            if (properties == null) return o;
+//            for (String fieldName : properties.value()) {
+//                Field field = beanClass.getField(fieldName);
+//                BeanUtils.setProperty(o, fieldName, getResultBean(field.getType(),params));
+//            }
+//        } catch (InstantiationException e) {
+//            e.printStackTrace();
+//        } catch (IllegalAccessException e) {
+//            e.printStackTrace();
+//        } catch (NoSuchFieldException e) {
+//            e.printStackTrace();
+//        } catch (InvocationTargetException e) {
+//            e.printStackTrace();
+//        }
+//        return o;
+//    }
+//
+//    private Object getResult(Class<?> invokeClass, Map<String,Object> params) {
+//        org.shijh.myframework.framework.annotation.ResultMap resultMap = invokeClass.getAnnotation(org.shijh.myframework.framework.annotation.ResultMap.class);
+//        Class<?> beanClass = resultMap.value();
+//        return getResultBean(beanClass, params);
+//    }
 
     @SuppressWarnings("unchecked")
     private <T> List<T> queryList(String sql, boolean isBean, boolean isForObject, ResultMap resultMap, Object... args) {
@@ -180,7 +178,6 @@ public class JdbcTemplate {
             while (resultSet.next()) {
                 Map<String, Object> rm = getResultMap(resultSet);
                 Object result = resultMap.invoke(rm);
-//                Object result = getResult(ClassUtil.getInvokeClass(), rm);
                 resultList.add((T) result);
                 if (isForObject) break;
             }

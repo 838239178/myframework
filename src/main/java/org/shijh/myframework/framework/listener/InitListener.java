@@ -1,7 +1,9 @@
 package org.shijh.myframework.framework.listener;
 
 import lombok.extern.java.Log;
+import org.shijh.myframework.framework.Interceptor;
 import org.shijh.myframework.framework.bean.BeanFactory;
+import org.shijh.myframework.framework.bean.CheckSessionInterceptor;
 import org.shijh.myframework.framework.bean.FrameworkConfig;
 import org.shijh.myframework.framework.bean.JdbcConfig;
 import org.shijh.myframework.framework.controller.Controller;
@@ -16,6 +18,7 @@ import javax.servlet.http.HttpSession;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.List;
+import java.util.zip.Checksum;
 
 @WebListener
 @Log
@@ -26,7 +29,6 @@ public class InitListener implements ServletContextListener {
     private void initController(List<String> controllers) throws ClassNotFoundException {
         for (String className : controllers) {
             Object bean = BeanFactory.I.getBean(Class.forName(className));
-            assert servletHandler != null;
             servletHandler.addCtrl((Controller) bean);
         }
     }
@@ -38,6 +40,14 @@ public class InitListener implements ServletContextListener {
         ConnectionManager.setJdbcConfig(jdbcConfig);
     }
 
+    private void InitInterceptors(List<String> interceptors) throws ClassNotFoundException {
+        for (String interceptor : interceptors) {
+            Object i = BeanFactory.I.getBean(Class.forName(interceptor));
+            servletHandler.addInterceptor(((Interceptor) i));
+        }
+        servletHandler.addInterceptor(BeanFactory.I.getBean(CheckSessionInterceptor.class));
+    }
+
     @Override
     public void contextInitialized(ServletContextEvent sce) {
         try {
@@ -45,6 +55,7 @@ public class InitListener implements ServletContextListener {
             FrameworkConfig config = ResourceUtil.loadYamlAs(resource, FrameworkConfig.class);
             initJdbc(config.getJdbcConfig());
             initController(config.getController());
+            InitInterceptors(config.getInterceptor());
         } catch (FileNotFoundException e) {
             log.warning("找不到配置文件‘myframework.yml’");
             e.printStackTrace();

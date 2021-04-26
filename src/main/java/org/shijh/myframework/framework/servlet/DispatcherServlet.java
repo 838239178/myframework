@@ -23,9 +23,8 @@ public class DispatcherServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        String url = req.getRequestURL().toString();
         assert handler != null;
-        ModelAndView res = handler.execute(url, req.getParameterMap(), req.getSession());
+        ModelAndView res = handler.execute(req, resp);
         if (res == null) {
             resp.sendRedirect("/error.jsp");
         } else {

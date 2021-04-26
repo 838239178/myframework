@@ -5,9 +5,9 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-@Deprecated
-@Target(ElementType.TYPE)
+@Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface ResultMap {
-    Class<?> value();
+public @interface DoIntercept {
+    String value();
+    String[] params() default {};
 }

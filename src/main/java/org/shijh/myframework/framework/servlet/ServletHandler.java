@@ -2,7 +2,9 @@ package org.shijh.myframework.framework.servlet;
 
 
 import org.apache.commons.beanutils.BeanUtils;
+import org.shijh.myframework.framework.Interceptor;
 import org.shijh.myframework.framework.annotation.Component;
+import org.shijh.myframework.framework.annotation.DoIntercept;
 import org.shijh.myframework.framework.util.Assembler;
 import org.shijh.myframework.framework.bean.ModelAndView;
 import org.shijh.myframework.framework.bean.MyAction;
@@ -12,10 +14,13 @@ import org.shijh.myframework.framework.controller.Controller;
 import org.shijh.myframework.framework.util.Str;
 import sun.rmi.runtime.Log;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
+import java.sql.ResultSet;
 import java.util.*;
 import java.util.concurrent.ConcurrentSkipListMap;
 
@@ -23,6 +28,7 @@ import java.util.concurrent.ConcurrentSkipListMap;
 @lombok.extern.java.Log
 public class ServletHandler {
     private final Map<String, Controller> ctrlMap;
+    private final List<Interceptor> interceptorList;
 
     public void addCtrl(Controller... controllers) {
         for (Controller ctrl : controllers) {
@@ -33,8 +39,13 @@ public class ServletHandler {
         }
     }
 
+    public void addInterceptor(Interceptor interceptor) {
+        interceptorList.add(interceptor);
+    }
+
     public ServletHandler() {
         ctrlMap = new ConcurrentSkipListMap<>();
+        interceptorList = new LinkedList<>();
     }
 
     private MyAction getMethod(String url) {
@@ -79,8 +90,21 @@ public class ServletHandler {
         return null;
     }
 
-    public ModelAndView execute(String url, Map<String, String[]> paramMap, HttpSession session) {
-        Map<String, Object> curMap = getCurrentMap(paramMap);
+    private ModelAndView preIntercept(DoIntercept anno, HttpServletResponse response, HttpServletRequest request) {
+        for (Interceptor interceptor : interceptorList) {
+            if ( anno != null && interceptor.support(anno) || interceptor.support(request.getRequestURL().toString())) {
+                log.info("do intercept:" + interceptor.getClass().getName());
+                ModelAndView mv = interceptor.preHandle(request, response, anno == null ? new String[0] : anno.params());
+                if (mv != null) return mv;
+            }
+        }
+        return null;
+    }
+
+    public ModelAndView execute(HttpServletRequest request, HttpServletResponse response) {
+        String url = request.getRequestURL().toString();
+        HttpSession session = request.getSession();
+        Map<String, Object> curMap = getCurrentMap(request.getParameterMap());
         MyAction method = getMethod(url);
         if (method == null) {
             log.warning("找不到控制器方法，错误url:" + url);
@@ -116,7 +140,15 @@ public class ServletHandler {
                     realParam.add(p);
                 }
             }
-            return (ModelAndView) method.invoke(realParam.toArray());
+            //前置拦截
+            DoIntercept doi = method.getAnnotation(DoIntercept.class);
+            ModelAndView mv = preIntercept(doi, response, request);
+            if (mv == null) {
+                return (ModelAndView) method.invoke(realParam.toArray());
+            } else {
+                return mv;
+            }
+
         } catch (Exception e) {
             e.printStackTrace();
         }
