@@ -27,9 +27,11 @@ public class InitListener implements ServletContextListener {
     private final ServletHandler servletHandler = BeanFactory.I.getBean(ServletHandler.class);
 
     private void initController(List<String> controllers) throws ClassNotFoundException {
-        for (String className : controllers) {
-            Object bean = BeanFactory.I.getBean(Class.forName(className));
-            servletHandler.addCtrl((Controller) bean);
+        if (controllers != null) {
+            for (String className : controllers) {
+                Object bean = BeanFactory.I.getBean(Class.forName(className));
+                servletHandler.addCtrl((Controller) bean);
+            }
         }
     }
 
@@ -41,9 +43,11 @@ public class InitListener implements ServletContextListener {
     }
 
     private void InitInterceptors(List<String> interceptors) throws ClassNotFoundException {
-        for (String interceptor : interceptors) {
-            Object i = BeanFactory.I.getBean(Class.forName(interceptor));
-            servletHandler.addInterceptor(((Interceptor) i));
+        if (interceptors != null) {
+            for (String interceptor : interceptors) {
+                Object i = BeanFactory.I.getBean(Class.forName(interceptor));
+                servletHandler.addInterceptor(((Interceptor) i));
+            }
         }
         servletHandler.addInterceptor(BeanFactory.I.getBean(CheckSessionInterceptor.class));
     }

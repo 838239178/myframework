@@ -1,6 +1,7 @@
 package org.shijh.myframework.framework.servlet;
 
 
+import com.sun.org.apache.xpath.internal.operations.Mod;
 import org.apache.commons.beanutils.BeanUtils;
 import org.shijh.myframework.framework.Interceptor;
 import org.shijh.myframework.framework.annotation.Component;
@@ -11,13 +12,16 @@ import org.shijh.myframework.framework.bean.MyAction;
 import org.shijh.myframework.framework.annotation.Mapping;
 import org.shijh.myframework.framework.annotation.Param;
 import org.shijh.myframework.framework.controller.Controller;
+import org.shijh.myframework.framework.util.ClassUtil;
 import org.shijh.myframework.framework.util.Str;
 import sun.rmi.runtime.Log;
+import sun.util.resources.th.CalendarData_th;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.sql.ResultSet;
@@ -92,13 +96,30 @@ public class ServletHandler {
 
     private ModelAndView preIntercept(DoIntercept anno, HttpServletResponse response, HttpServletRequest request) {
         for (Interceptor interceptor : interceptorList) {
-            if ( anno != null && interceptor.support(anno) || interceptor.support(request.getRequestURL().toString())) {
+            if (anno != null && interceptor.support(anno) || interceptor.support(request.getRequestURL().toString())) {
                 log.info("do intercept:" + interceptor.getClass().getName());
                 ModelAndView mv = interceptor.preHandle(request, response, anno == null ? new String[0] : anno.params());
                 if (mv != null) return mv;
             }
         }
         return null;
+    }
+
+    private ModelAndView doTargetInvoke(MyAction method,List<Object> realParam, HttpServletRequest request, HttpServletResponse response) {
+        DoIntercept doi = method.getAnnotation(DoIntercept.class);
+        ModelAndView mv = preIntercept(doi, response, request);
+        if (mv == null) {
+            try {
+                mv = (ModelAndView) method.invoke(realParam.toArray());
+            } catch (InvocationTargetException invokeException) {
+                mv = new ModelAndView() {{
+                    setSuccess(false);
+                    setView("/error.jsp");
+                    setModel("执行错误," + invokeException.getCause().getMessage());
+                }};
+            }
+        }
+        return mv;
     }
 
     public ModelAndView execute(HttpServletRequest request, HttpServletResponse response) {
@@ -126,29 +147,33 @@ public class ServletHandler {
                 }
                 // 尝试获取待注入参数的构造器 否则把整个paramMap当作一个对象处理
                 try {
-                    Object rp;
+                    Object paramValue;
+                    // 对HttpSession对象特殊处理
                     if (mParam.getType().equals(HttpSession.class)) {
-                        rp = session;
+                        paramValue = session;
                     } else {
-                        Constructor<?> constructor = mParam.getType().getConstructor(value.getClass());
-                        rp = constructor.newInstance(value);
+                        //尝试直接构造参数 （非JavaBean）
+                        Class<?> type = mParam.getType();
+                        if (ClassUtil.isPrimitiveClass(type)) {
+                            type = ClassUtil.wrapperClass((Class<? extends Number>) type);
+                            assert type != null;
+                        }
+                        Constructor<?> constructor = type.getConstructor(value.getClass());
+                        paramValue = constructor.newInstance(value);
                     }
-                    realParam.add(rp);
+                    realParam.add(paramValue);
                 } catch (NoSuchMethodException ne) {
+                    //尝试构造(JavaBean)
                     Object p = mParam.getType().newInstance();
                     BeanUtils.populate(p, curMap);
                     realParam.add(p);
+                } catch (InvocationTargetException ne) {
+                    //构造基本类型时可能因为空参导致错误
+                    log.warning("控制器方法接受的参数类型有误");
+                    realParam.add(null);
                 }
             }
-            //前置拦截
-            DoIntercept doi = method.getAnnotation(DoIntercept.class);
-            ModelAndView mv = preIntercept(doi, response, request);
-            if (mv == null) {
-                return (ModelAndView) method.invoke(realParam.toArray());
-            } else {
-                return mv;
-            }
-
+            return doTargetInvoke(method, realParam, request, response);
         } catch (Exception e) {
             e.printStackTrace();
         }

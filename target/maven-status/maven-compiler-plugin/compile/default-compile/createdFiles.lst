@@ -2,6 +2,7 @@ org\shijh\myframework\framework\servlet\DispatcherServlet.class
 org\shijh\myframework\framework\annotation\Autowired.class
 org\shijh\myframework\framework\bean\FrameworkConfig.class
 org\shijh\myframework\framework\bean\ResultMap.class
+org\shijh\myframework\framework\servlet\ServletHandler$1.class
 org\shijh\myframework\framework\annotation\DoIntercept.class
 org\shijh\myframework\framework\controller\Controller.class
 org\shijh\myframework\framework\dao\ConnectionPool.class

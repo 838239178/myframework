@@ -22,13 +22,13 @@ public class MyAction {
         return method.getParameters();
     }
 
-    public Object invoke(Object... args) {
+    public Object invoke(Object... args) throws InvocationTargetException{
         try {
             method.setAccessible(true);
             return method.invoke(context, args);
-        } catch (IllegalAccessException | InvocationTargetException e) {
+        } catch (IllegalAccessException e) {
             e.printStackTrace();
+            throw new InvocationTargetException(e);
         }
-        return null;
     }
 }

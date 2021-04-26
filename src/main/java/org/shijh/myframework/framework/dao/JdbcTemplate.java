@@ -65,7 +65,7 @@ public class JdbcTemplate {
     private void setStatementParam(PreparedStatement statement, int pramIndex, Object param) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException{
         String statementMethodName = getStatementSetterName(param);
         Class<?> pClass = param.getClass();
-        if (param instanceof Number) {
+        if (ClassUtil.isWrapperClass(pClass)) {
             pClass = ClassUtil.primitiveClass((Class<? extends Number>) pClass);
         }
         Method method = statement.getClass().getDeclaredMethod(statementMethodName, int.class, pClass);
@@ -181,7 +181,7 @@ public class JdbcTemplate {
                 resultList.add((T) result);
                 if (isForObject) break;
             }
-        } catch (SQLException e) {
+        } catch (SQLException | InvocationTargetException e) {
             e.printStackTrace();
         } finally {
             ConnectionManager.closeResultSet(resultSet);

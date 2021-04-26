@@ -1,13 +1,38 @@
 package org.shijh.myframework.framework.util;
 
+import java.util.Arrays;
+
 public abstract class ClassUtil {
 
     private static final Class<?>[] primitiveClasses = new Class[]{int.class, long.class, float.class, double.class,
             char.class, boolean.class, byte.class, short.class};
 
+    private static final Class<?>[] wrapperClasses = new Class[]{Integer.class, Long.class, Float.class, Double.class,
+            Character.class, Boolean.class, Byte.class, Short.class};
+
+    public static boolean isPrimitiveClass(Class<?> clazz) {
+        for (Class<?> primitiveClass : primitiveClasses) {
+            if (primitiveClass.equals(clazz)) return true;
+        }
+        return false;
+    }
+
+    public static boolean isWrapperClass(Class<?> clazz) {
+        return Number.class.isAssignableFrom(clazz);
+    }
+
     public static Class<?> primitiveClass(Class<? extends Number> target) {
         for (Class<?> aClass : primitiveClasses) {
             if (target.getSimpleName().toLowerCase().matches(aClass.getName() + ".*")) {
+                return aClass;
+            }
+        }
+        return null;
+    }
+
+    public static Class<?> wrapperClass(Class<? extends Number> target) {
+        for (Class<?> aClass : wrapperClasses) {
+            if (aClass.getSimpleName().toLowerCase().matches(target.getName() + ".*")) {
                 return aClass;
             }
         }
