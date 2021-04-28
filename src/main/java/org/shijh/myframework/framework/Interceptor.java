@@ -5,7 +5,6 @@ import org.shijh.myframework.framework.bean.ModelAndView;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.lang.annotation.Annotation;
 
 public interface Interceptor {
     default boolean support(DoIntercept annotation) {
@@ -16,5 +15,6 @@ public interface Interceptor {
         return false;
     }
 
-    ModelAndView preHandle(HttpServletRequest request, HttpServletResponse response, String[] params);
+    ModelAndView preHandle(HttpServletRequest request, HttpServletResponse response, Object[] invokeArgs, String[] annoParams);
+    default void afterHandle(HttpServletRequest request, HttpServletResponse response,Object result, String[] annoParams){}
 }

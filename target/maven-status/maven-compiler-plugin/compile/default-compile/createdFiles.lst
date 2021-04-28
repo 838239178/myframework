@@ -1,3 +1,4 @@
+org\shijh\myframework\framework\util\AopProxyUtil.class
 org\shijh\myframework\framework\servlet\DispatcherServlet.class
 org\shijh\myframework\framework\annotation\Autowired.class
 org\shijh\myframework\framework\bean\FrameworkConfig.class
@@ -19,6 +20,7 @@ org\shijh\myframework\framework\bean\BeanFactory.class
 org\shijh\myframework\framework\util\Assembler.class
 org\shijh\myframework\framework\Interceptor.class
 org\shijh\myframework\framework\bean\CheckSessionInterceptor.class
+org\shijh\myframework\framework\listener\InitListener$1.class
 org\shijh\myframework\framework\servlet\ServletHandler.class
 org\shijh\myframework\framework\dao\Dao.class
 org\shijh\myframework\framework\bean\JdbcConfig.class

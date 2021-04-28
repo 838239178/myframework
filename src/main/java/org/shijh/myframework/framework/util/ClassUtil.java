@@ -1,5 +1,7 @@
 package org.shijh.myframework.framework.util;
 
+import org.apache.commons.beanutils.ConvertUtils;
+
 import java.util.Arrays;
 
 public abstract class ClassUtil {
@@ -15,6 +17,14 @@ public abstract class ClassUtil {
             if (primitiveClass.equals(clazz)) return true;
         }
         return false;
+    }
+
+    public static ClassLoader getClassLoader(Object object) {
+        return object.getClass().getClassLoader();
+    }
+
+    public static Class<?>[] getInterfaces(Object object) {
+        return object.getClass().getInterfaces();
     }
 
     public static boolean isWrapperClass(Class<?> clazz) {

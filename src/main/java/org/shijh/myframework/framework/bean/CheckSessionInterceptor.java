@@ -22,9 +22,9 @@ public class CheckSessionInterceptor implements Interceptor {
     }
 
     @Override
-    public ModelAndView preHandle(HttpServletRequest request, HttpServletResponse response, String[] params) {
+    public ModelAndView preHandle(HttpServletRequest request, HttpServletResponse response, Object[] invokeArgs, String[] annoParams) {
         HttpSession session = request.getSession();
-        for (String param : params) {
+        for (String param : annoParams) {
             Object o = session.getAttribute(param);
             if (o == null) {
                 return new ModelAndView(){{

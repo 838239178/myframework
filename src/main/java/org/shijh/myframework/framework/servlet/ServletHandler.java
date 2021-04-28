@@ -3,9 +3,12 @@ package org.shijh.myframework.framework.servlet;
 
 import com.sun.org.apache.xpath.internal.operations.Mod;
 import org.apache.commons.beanutils.BeanUtils;
+import org.apache.commons.beanutils.ConversionException;
+import org.apache.commons.beanutils.ConvertUtils;
 import org.shijh.myframework.framework.Interceptor;
 import org.shijh.myframework.framework.annotation.Component;
 import org.shijh.myframework.framework.annotation.DoIntercept;
+import org.shijh.myframework.framework.bean.JdbcConfig;
 import org.shijh.myframework.framework.util.Assembler;
 import org.shijh.myframework.framework.bean.ModelAndView;
 import org.shijh.myframework.framework.bean.MyAction;
@@ -14,16 +17,14 @@ import org.shijh.myframework.framework.annotation.Param;
 import org.shijh.myframework.framework.controller.Controller;
 import org.shijh.myframework.framework.util.ClassUtil;
 import org.shijh.myframework.framework.util.Str;
+import sun.awt.im.InputMethodWindow;
 import sun.rmi.runtime.Log;
 import sun.util.resources.th.CalendarData_th;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.lang.reflect.Parameter;
+import java.lang.reflect.*;
 import java.sql.ResultSet;
 import java.util.*;
 import java.util.concurrent.ConcurrentSkipListMap;
@@ -94,31 +95,43 @@ public class ServletHandler {
         return null;
     }
 
-    private ModelAndView preIntercept(DoIntercept anno, HttpServletResponse response, HttpServletRequest request) {
+    private ModelAndView preIntercept(DoIntercept anno, List<Object> realParam, HttpServletResponse response, HttpServletRequest request) {
         for (Interceptor interceptor : interceptorList) {
             if (anno != null && interceptor.support(anno) || interceptor.support(request.getRequestURL().toString())) {
                 log.info("do intercept:" + interceptor.getClass().getName());
-                ModelAndView mv = interceptor.preHandle(request, response, anno == null ? new String[0] : anno.params());
+                ModelAndView mv = interceptor.preHandle(request, response, realParam.toArray(), anno == null ? new String[0] : anno.params());
                 if (mv != null) return mv;
             }
         }
         return null;
     }
 
+    private void afterIntercept(DoIntercept anno, Object result, HttpServletResponse response, HttpServletRequest request) {
+        for (Interceptor interceptor : interceptorList) {
+            if (anno != null && interceptor.support(anno) || interceptor.support(request.getRequestURL().toString())) {
+                log.info("do intercept:" + interceptor.getClass().getName());
+                interceptor.afterHandle(request, response, result, anno == null ? new String[0] : anno.params());
+            }
+        }
+    }
+
     private ModelAndView doTargetInvoke(MyAction method,List<Object> realParam, HttpServletRequest request, HttpServletResponse response) {
         DoIntercept doi = method.getAnnotation(DoIntercept.class);
-        ModelAndView mv = preIntercept(doi, response, request);
+        ModelAndView mv = preIntercept(doi,realParam,response, request);
         if (mv == null) {
             try {
                 mv = (ModelAndView) method.invoke(realParam.toArray());
             } catch (InvocationTargetException invokeException) {
+                invokeException.printStackTrace();
                 mv = new ModelAndView() {{
                     setSuccess(false);
                     setView("/error.jsp");
                     setModel("执行错误," + invokeException.getCause().getMessage());
                 }};
+                return mv;
             }
         }
+        afterIntercept(doi,mv,response,request);
         return mv;
     }
 
@@ -146,28 +159,28 @@ public class ServletHandler {
                     value = mapValues[i];
                 }
                 // 尝试获取待注入参数的构造器 否则把整个paramMap当作一个对象处理
+                Class<?> mParamType = mParam.getType();
                 try {
                     Object paramValue;
-                    // 对HttpSession对象特殊处理
-                    if (mParam.getType().equals(HttpSession.class)) {
+                    if (mParamType.equals(HttpSession.class)) {
                         paramValue = session;
                     } else {
                         //尝试直接构造参数 （非JavaBean）
-                        Class<?> type = mParam.getType();
-                        if (ClassUtil.isPrimitiveClass(type)) {
-                            type = ClassUtil.wrapperClass((Class<? extends Number>) type);
-                            assert type != null;
+                        if(ClassUtil.isPrimitiveClass(mParamType)) {
+                            mParamType = ClassUtil.wrapperClass((Class<? extends Number>) mParamType);
                         }
-                        Constructor<?> constructor = type.getConstructor(value.getClass());
-                        paramValue = constructor.newInstance(value);
+                        paramValue = ConvertUtils.convert(value, mParamType);
+                        if (!(mParamType.isInstance(paramValue))) {
+                            throw new ConversionException("fail");
+                        }
                     }
                     realParam.add(paramValue);
-                } catch (NoSuchMethodException ne) {
+                } catch (ConversionException ne) {
                     //尝试构造(JavaBean)
-                    Object p = mParam.getType().newInstance();
+                    Object p = mParamType.newInstance();
                     BeanUtils.populate(p, curMap);
                     realParam.add(p);
-                } catch (InvocationTargetException ne) {
+                } catch (Exception ne) {
                     //构造基本类型时可能因为空参导致错误
                     log.warning("控制器方法接受的参数类型有误");
                     realParam.add(null);

@@ -94,6 +94,9 @@ public class JdbcTemplate {
                 Field field = bean.getClass().getDeclaredField(param);
                 field.setAccessible(true);
                 o = field.get(bean);
+                if (o == null) {
+                    throw new IllegalAccessException("statement参数[" + o.getClass().getName() + "]"+param+"不能为 null");
+                }
                 setStatementParam(statement,i+1, o);
             }
         } catch (NoSuchMethodException | InvocationTargetException e) {
@@ -112,10 +115,10 @@ public class JdbcTemplate {
             }
             return connection.prepareStatement(sql);
         } catch (SQLException throwables) {
-            System.out.println("错误的sql:" + sql);
+            log.warning("错误的sql:" + sql);
             throwables.printStackTrace();
         } catch (IllegalAccessException | NoSuchFieldException ie) {
-            System.out.println("参数封装错误");
+            log.warning("参数封装错误," + ie.getMessage());
             ie.printStackTrace();
         } finally {
             connectionPool.returnConnection(connection);

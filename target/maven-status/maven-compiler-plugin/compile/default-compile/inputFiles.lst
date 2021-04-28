@@ -21,6 +21,7 @@ D:\code-project\myframwork\src\main\java\org\shijh\myframework\framework\annotat
 D:\code-project\myframwork\src\main\java\org\shijh\myframework\framework\dao\Dao.java
 D:\code-project\myframwork\src\main\java\org\shijh\myframework\framework\util\Str.java
 D:\code-project\myframwork\src\main\java\org\shijh\myframework\framework\annotation\Component.java
+D:\code-project\myframwork\src\main\java\org\shijh\myframework\framework\util\AopProxyUtil.java
 D:\code-project\myframwork\src\main\java\org\shijh\myframework\framework\annotation\Autowired.java
 D:\code-project\myframwork\src\main\java\org\shijh\myframework\framework\dao\ConnectionManager.java
 D:\code-project\myframwork\src\main\java\org\shijh\myframework\framework\bean\JdbcConfig.java

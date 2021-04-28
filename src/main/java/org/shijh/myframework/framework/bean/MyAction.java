@@ -26,8 +26,7 @@ public class MyAction {
         try {
             method.setAccessible(true);
             return method.invoke(context, args);
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
+        } catch (IllegalAccessException | IllegalArgumentException e) {
             throw new InvocationTargetException(e);
         }
     }

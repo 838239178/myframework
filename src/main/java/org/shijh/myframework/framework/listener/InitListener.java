@@ -1,6 +1,13 @@
 package org.shijh.myframework.framework.listener;
 
 import lombok.extern.java.Log;
+import org.apache.commons.beanutils.BeanUtils;
+import org.apache.commons.beanutils.ConvertUtils;
+import org.apache.commons.beanutils.ConvertUtilsBean2;
+import org.apache.commons.beanutils.Converter;
+import org.apache.commons.beanutils.converters.DateConverter;
+import org.apache.commons.beanutils.converters.DateTimeConverter;
+import org.apache.commons.beanutils.locale.converters.DateLocaleConverter;
 import org.shijh.myframework.framework.Interceptor;
 import org.shijh.myframework.framework.bean.BeanFactory;
 import org.shijh.myframework.framework.bean.CheckSessionInterceptor;
@@ -9,6 +16,7 @@ import org.shijh.myframework.framework.bean.JdbcConfig;
 import org.shijh.myframework.framework.controller.Controller;
 import org.shijh.myframework.framework.dao.ConnectionManager;
 import org.shijh.myframework.framework.servlet.ServletHandler;
+import org.shijh.myframework.framework.util.ClassUtil;
 import org.shijh.myframework.framework.util.ResourceUtil;
 
 import javax.servlet.ServletContextEvent;
@@ -17,6 +25,12 @@ import javax.servlet.annotation.WebListener;
 import javax.servlet.http.HttpSession;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 import java.util.zip.Checksum;
 
@@ -52,8 +66,34 @@ public class InitListener implements ServletContextListener {
         servletHandler.addInterceptor(BeanFactory.I.getBean(CheckSessionInterceptor.class));
     }
 
+    private void initConvertUtil() {
+        ConvertUtils.register(new Converter() {
+            @Override
+            public Object convert(Class type, Object value) {//注册一个日期转换器
+                Date date1 = null;
+                if (value instanceof String) {
+                    String date = (String) value;
+                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+                    try {
+                        date1 = sdf.parse(date);
+                    } catch (ParseException e) {
+                        sdf = new SimpleDateFormat("yyyy-MM-dd");
+                        try {
+                            date1 = sdf.parse(date);
+                        } catch (ParseException parseException) {
+                            parseException.printStackTrace();
+                        }
+                        e.printStackTrace();
+                    }
+                }
+                return date1;
+            }
+        }, Date.class);
+    }
+
     @Override
     public void contextInitialized(ServletContextEvent sce) {
+        initConvertUtil();
         try {
             InputStream resource = ResourceUtil.getResourceAsStream("classpath:myframework.yml");
             FrameworkConfig config = ResourceUtil.loadYamlAs(resource, FrameworkConfig.class);
