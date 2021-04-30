@@ -80,11 +80,11 @@ public class JdbcTemplate {
         String regex = "#\\{([a-zA-Z0-9]+)}";
         String[] params = Str.match(regex, sql);
 
-        log.info(Arrays.toString(params));
+        log.info("need param:" + Arrays.toString(params));
 
         String afterSql = sql.replaceAll(regex, "?");
 
-        log.info(afterSql);
+        log.info("sql after solve:" + afterSql);
 
         PreparedStatement statement = connection.prepareStatement(afterSql);
         Object o = null;
@@ -102,6 +102,9 @@ public class JdbcTemplate {
         } catch (NoSuchMethodException | InvocationTargetException e) {
             throw new SQLException("不支持的参数类型->" + o.getClass().getName(), e);
         }
+
+        log.info("final statement:" + statement.toString());
+
         return statement;
     }
 
