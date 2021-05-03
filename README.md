@@ -149,4 +149,3 @@ jdbcConfig:
 - Interceptor
 
   拦截器接口，实现其`preHandle`、`afterHandle`对方法进行拦截，拦截器名为`@Component`中的参数值，默认为类名，实现`support`方法对限定方法进行筛选。
-
